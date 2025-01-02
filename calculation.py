@@ -139,9 +139,6 @@ def calculate_duration(table: pd.DataFrame, exclude_holidays: bool, course_only:
     course_only: bool, 是否只计算上课时间
     '''
 
-    # exclude_holidays和course_only不能同时为True
-    assert not (exclude_holidays and course_only), 'exclude_holidays和course_only不能同时为True'
-
     # 排序，按照序号的升序，保证最晚的日期在最前面
     table.sort_values(by='序号', ascending=True, inplace=True)
 
@@ -183,6 +180,7 @@ def main():
     print('包括非工作日的停留天数:', calculate_duration(table, exclude_holidays=False, course_only=False))
     print('仅包括工作日的停留天数:', calculate_duration(table, exclude_holidays=True, course_only=False))
     print('仅包括上课时间的停留天数:', calculate_duration(table, exclude_holidays=False, course_only=True))
+    print('仅包括工作日和上课时间的停留天数:', calculate_duration(table, exclude_holidays=True, course_only=True))
 
 if __name__ == '__main__':
     main()
