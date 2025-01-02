@@ -2,9 +2,12 @@ import pandas as pd
 import pdfplumber
 import re
 from icalendar import Calendar
+import json
 
 holidays_path: str = 'assets/2024-2025-msar-public-holidays-zh-hans.ics'
 holidays_calendar = Calendar().from_ical(open(holidays_path, 'r', encoding='utf-8').read())
+winter_holiday: json = json.load(open('assets/Winter_holiday.json', 'r', encoding='utf-8'))
+course: json = json.load(open('assets/Course.json', 'r', encoding='utf-8'))
 today: pd.Timestamp = pd.Timestamp.now()
 
 def is_workday(date: pd.Timestamp) -> bool:
@@ -25,7 +28,41 @@ def is_workday(date: pd.Timestamp) -> bool:
             holiday_date: pd.Timestamp = pd.Timestamp(component.get('dtstart').dt)
             if date.date() == holiday_date.date():
                 return False
+            
+    # 如果是寒假，那么一定不是工作日
+    for description in winter_holiday:
+        date_range: str = winter_holiday[description].split('-')
+        start_date: pd.Timestamp = pd.Timestamp(date_range[0]).normalize()
+        end_date: pd.Timestamp = pd.Timestamp(date_range[1]).normalize()
+        if date.normalize() >= start_date and date.normalize() <= end_date:
+            return False
+        
     return True
+
+def is_course(date: pd.Timestamp) -> bool:
+    '''
+    判断是否是上课时间
+
+    Parameters:
+    date: pd.Timestamp, 日期
+    '''
+
+    # 如果是周末，那么一定不是上课时间
+    if date.dayofweek >= 5:
+        return False
+    
+    # 如果是上课时间，那么一定是上课时间
+    for description in course:
+        current_semester: json = course[description]
+        for period in current_semester:
+            date_range: str = current_semester[period].split('-')
+            start_date: pd.Timestamp = pd.Timestamp(date_range[0]).normalize()
+            end_date: pd.Timestamp = pd.Timestamp(date_range[1]).normalize()
+            if date.normalize() >= start_date and date.normalize() <= end_date:
+                return True
+            
+    return False
+
 
 def extract_tables_from_pdf(file_path: str, start_from: pd.Timestamp = None, end_at: pd.Timestamp = None) -> pd.DataFrame:
     table: pd.DataFrame = pd.DataFrame()
@@ -92,13 +129,18 @@ def convert_date_to_index(duration_begin: pd.Timestamp, duration_end: pd.Timesta
 
     return result
 
-def calculate_duration(table: pd.DataFrame, exclude_holidays: bool = True) -> int:
+def calculate_duration(table: pd.DataFrame, exclude_holidays: bool, course_only: bool) -> int:
     '''
     计算不在境内的天数，包括非工作日，我们保证最早的是出境，最晚的是入境
 
     Parameters:
     table: pd.DataFrame, 出入境记录的DataFrame
+    exclude_holidays: bool, 是否排除非工作日
+    course_only: bool, 是否只计算上课时间
     '''
+
+    # exclude_holidays和course_only不能同时为True
+    assert not (exclude_holidays and course_only), 'exclude_holidays和course_only不能同时为True'
 
     # 排序，按照序号的升序，保证最晚的日期在最前面
     table.sort_values(by='序号', ascending=True, inplace=True)
@@ -125,6 +167,12 @@ def calculate_duration(table: pd.DataFrame, exclude_holidays: bool = True) -> in
             if not is_workday(date):
                 days[index] = False
 
+    # 讲日期里面全部的非上课时间都标记为False
+    if course_only:
+        for index, date in enumerate(pd.date_range(start_from, end_at, inclusive='both')):
+            if not is_course(date):
+                days[index] = False
+
     # 把全部的days中为True的天数加起来
     return sum(days)
 
@@ -132,8 +180,9 @@ def main():
     pdf_path = 'assets/dcc8c7e7e13e5aaba5adcf82e5124e37.pdf'
     table = extract_tables_from_pdf(pdf_path, start_from='2024-09-02', end_at='2024-12-31')
     table.to_csv('assets/extracted_table.csv', index=False)
-    print('包括非工作日的停留天数:', calculate_duration(table, exclude_holidays=False))
-    print('仅包括工作日的停留天数:', calculate_duration(table, exclude_holidays=True))
+    print('包括非工作日的停留天数:', calculate_duration(table, exclude_holidays=False, course_only=False))
+    print('仅包括工作日的停留天数:', calculate_duration(table, exclude_holidays=True, course_only=False))
+    print('仅包括上课时间的停留天数:', calculate_duration(table, exclude_holidays=False, course_only=True))
 
 if __name__ == '__main__':
     main()
