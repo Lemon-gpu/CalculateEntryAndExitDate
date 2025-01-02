@@ -1,0 +1,13 @@
+计算逗留日期的一个东西，可以先在国家移民局政务服务平台的出入境记录查询下载自己的出入境记录pdf，然后用这个工具计算逗留日期。目前是澳门专用的。计算澳科大/澳门科技大学那边的，但我不知道寒假是怎么算的，所以不知道对不对。
+
+## 使用方法
+
+1. 下载自己的出入境记录pdf，然后改改路径，运行`main.py`。
+
+English version:
+
+A tool to calculate the duration of stay, you can download your entry and exit records pdf from the National Immigration Administration's service platform, and then use this tool to calculate the duration of stay. Currently, it is specifically for Macau. It calculates the duration of stay at MUST/Macau University of Science and Technology, but I don't know how to calculate the winter vacation, so I don't know if it's correct.
+
+## Usage
+
+1. Download your entry and exit records pdf, then change the path, and run `main.py`.
