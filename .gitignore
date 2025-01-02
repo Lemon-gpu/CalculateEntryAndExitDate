@@ -1,0 +1,5 @@
+# 忽略 assets 文件夹下的所有 .pdf 文件
+assets/**/*.pdf
+
+# 忽略 assets 文件夹下的所有 .csv 文件
+assets/**/*.csv
