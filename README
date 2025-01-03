@@ -2,7 +2,7 @@
 
 ## 使用方法
 
-1. 下载自己的出入境记录pdf，然后改改路径，运行`main.py`。
+1. 下载自己的出入境记录pdf，然后改改路径，运行`calculation.py`。
 
 English version:
 
@@ -10,4 +10,4 @@ A tool to calculate the duration of stay, you can download your entry and exit r
 
 ## Usage
 
-1. Download your entry and exit records pdf, then change the path, and run `main.py`.
+1. Download your entry and exit records pdf, then change the path, and run `calculation.py`.
